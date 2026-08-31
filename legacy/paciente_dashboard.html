@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenBite | Panel del Paciente</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .hero-paciente { background: linear-gradient(135deg, var(--green-light) 0%, white 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 35px 30px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+    .hero-paciente h1 { font-size: 24px; color: var(--green-dark); margin-bottom: 8px; }
+    .hero-paciente p { font-size: 14px; color: var(--text-mid); max-width: 500px; line-height: 1.6; }
+    .status-card { text-align: center; padding: 25px 20px; }
+    .status-card h3 { font-size: 28px; color: var(--text-dark); margin: 10px 0 5px 0; }
+    .status-card p { font-size: 13px; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .status-icon { width: 48px; height: 48px; background: var(--body-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto; font-size: 20px; }
+    .current-plan-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; display: flex; gap: 20px; align-items: center; }
+    .plan-icon-large { width: 80px; height: 80px; background: var(--green-light); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 40px; flex-shrink: 0; }
+    .action-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); font-weight: 600; color: var(--text-dark); transition: all var(--transition); cursor: pointer; }
+    .action-btn:hover { border-color: var(--green); color: var(--green); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-layout">
+  
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-header" style="display: flex; text-decoration: none;">🍏 GreenBite</a>
+    <div class="sidebar-menu">
+      <div class="menu-label">Mi Espacio</div>
+      <a href="paciente_dashboard.html" class="menu-item active">Inicio</a>
+      <a href="paciente_perfil.html" class="menu-item">Mi Perfil de Salud</a>
+      <a href="paciente_mis_dietas.html" class="menu-item">Mis Dietas</a>
+      <div class="menu-label" style="margin-top: 20px;">Explorar</div>
+      <a href="paciente_catalogo.html" class="menu-item">Catálogo de Planes</a>
+    </div>
+    <div class="sidebar-footer"><a href="index.html" class="menu-item menu-logout" onclick="cerrarSesion()">Cerrar Sesión</a></div>
+  </aside>
+
+  <div class="main-content">
+    
+    <header class="topbar">
+      <div class="topbar-title">Panel del Paciente</div>
+      
+      <div class="user-profile">
+        <div>
+          <div class="user-name" id="nav-nombre">Cargando...</div>
+          <div class="user-role">Paciente Registrado</div>
+        </div>
+        <div class="user-avatar" id="nav-avatar" style="background-color: var(--blue);">--</div>
+      </div>
+    </header>
+
+    <main class="content-area">
+      
+      <div class="hero-paciente">
+        <div>
+          <h1 id="hero-saludo">¡Hola! 👋</h1>
+          <p>Bienvenido a tu espacio personal de GreenBite. Aquí podrás llevar el control de tu evolución física y revisar las dietas que te asignen nuestros profesionales.</p>
+        </div>
+        <a href="paciente_perfil.html" class="btn btn-primary" style="padding: 12px 24px;">Actualizar mi Perfil Médico</a>
+      </div>
+
+      <div style="margin-bottom: 30px;">
+        <h2 style="font-size: 14px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 15px;">Accesos Rápidos</h2>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+          <a href="paciente_perfil.html" class="action-btn"><span>👤</span> Ver mis datos y medidas</a>
+          <a href="paciente_catalogo.html" class="action-btn"><span>📚</span> Explorar dietas públicas</a>
+        </div>
+      </div>
+
+      <div class="grid-3 mb-30">
+        <div class="card status-card">
+          <div class="status-icon">⚖️</div>
+          <h3 id="stat-peso">-- kg</h3>
+          <p>Peso Registrado</p>
+        </div>
+        <div class="card status-card">
+          <div class="status-icon">🎯</div>
+          <h3 id="stat-objetivo">Ninguno</h3>
+          <p>Objetivo Actual</p>
+        </div>
+        <div class="card status-card" id="card-alerta">
+          <div class="status-icon" style="background: var(--red-soft);">⚠️</div>
+          <h3 style="color: var(--red);">¡Atención!</h3>
+          <p style="color: var(--red);">Perfil Incompleto</p>
+        </div>
+      </div>
+
+      <div class="current-plan-card">
+        <div class="plan-icon-large" style="background: var(--body-bg); opacity: 0.5;">🍽️</div>
+        <div>
+          <h2 style="font-size: 20px; color: var(--text-dark); margin-bottom: 5px;">Aún no tienes una dieta asignada</h2>
+          <p style="color: var(--text-mid); font-size: 14px; max-width: 500px; margin-bottom: 15px;">Para que un nutricionista pueda evaluarte y asignarte un plan alimenticio 100% seguro para ti, primero debes completar tu Perfil de Salud.</p>
+          <a href="paciente_perfil.html" class="btn btn-primary">Completar Perfil Ahora</a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  window.onload = function() {
+    // 1. Verificar si hay un usuario logueado
+    let usuarioActual = JSON.parse(localStorage.getItem('usuario_actual'));
+    
+    // Si alguien intenta entrar directo sin iniciar sesión, lo echamos
+    if (!usuarioActual) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // 2. Actualizar la barra superior
+    document.getElementById('nav-nombre').innerText = usuarioActual.nombre;
+    let iniciales = usuarioActual.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    document.getElementById('nav-avatar').innerText = iniciales;
+
+    // 3. Actualizar el saludo (Solo el primer nombre)
+    let primerNombre = usuarioActual.nombre.split(' ')[0];
+    document.getElementById('hero-saludo').innerText = `¡Hola, ${primerNombre}! 👋`;
+
+    // 4. Actualizar las tarjetas de estado con sus datos reales
+    if (usuarioActual.peso > 0) {
+      document.getElementById('stat-peso').innerText = usuarioActual.peso + " kg";
+    }
+    
+    if (usuarioActual.objetivo !== "sana" || usuarioActual.peso > 0) {
+      let objText = usuarioActual.objetivo === 'bajar' ? 'Bajar Peso' : usuarioActual.objetivo === 'musculo' ? 'Masa Muscular' : 'Vida Sana';
+      document.getElementById('stat-objetivo').innerText = objText;
+    }
+
+    // Si ya completó su perfil (tiene peso mayor a 0), quitamos la tarjeta roja de alerta
+    if (usuarioActual.peso > 0 && usuarioActual.altura > 0) {
+      let cardAlerta = document.getElementById('card-alerta');
+      cardAlerta.innerHTML = `<div class="status-icon" style="background: var(--green-light);">✅</div><h3 style="color: var(--green-dark);">¡Todo Listo!</h3><p style="color: var(--green-dark);">Perfil Completado</p>`;
+    }
+  };
+
+  function cerrarSesion() {
+    localStorage.removeItem('usuario_actual');
+  }
+</script>
+</body>
+</html>

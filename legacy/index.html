@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenBite | Nutrición Inteligente</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .navbar { background-color: white; padding: 20px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .navbar .container { display: flex; justify-content: space-between; align-items: center; }
+    .brand { font-size: 24px; font-weight: 700; color: var(--green-dark); display: flex; align-items: center; gap: 10px; }
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+    .nav-links a.nav-item { font-weight: 600; color: var(--text-mid); transition: color var(--transition); }
+    .nav-links a.nav-item:hover { color: var(--green); }
+    .hero { text-align: center; padding: 100px 20px; background: white; margin-top: 40px; border-radius: var(--radius); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .hero h1 { font-size: 48px; color: var(--green-dark); margin-bottom: 20px; }
+    .hero p { font-size: 18px; color: var(--text-mid); max-width: 600px; margin: 0 auto 30px auto; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; width: 100%; max-width: 500px; border-radius: var(--radius); overflow: hidden; padding: 30px; position: relative; }
+    .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light); }
+    .modal h2 { color: var(--green-dark); margin-bottom: 10px; }
+    .modal-macro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; text-align: center; }
+    .modal-macro-box { background: var(--body-bg); padding: 15px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .modal-macro-box strong { display: block; font-size: 20px; color: var(--green-dark); }
+    .modal-macro-box span { font-size: 11px; text-transform: uppercase; color: var(--text-mid); font-weight: 700; }
+    
+    /* Estilos del menú de usuario y dropdown */
+    .user-dropdown-wrapper { position: relative; display: none; margin-left: 10px; }
+    .user-badge {
+      display: flex; align-items: center; gap: 10px; padding: 6px 15px; cursor: pointer;
+      border-radius: 30px; background: var(--green-light); border: 1px solid var(--green); transition: all 0.2s;
+    }
+    .user-badge:hover { background: var(--green); }
+    .user-badge:hover * { color: white !important; }
+    
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 10px); right: 0; background: white;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 200px;
+      display: none; flex-direction: column; overflow: hidden; z-index: 200;
+    }
+    .dropdown-menu.show { display: flex; }
+    .dropdown-menu a {
+      padding: 12px 20px; font-size: 13px; font-weight: 600; color: var(--text-dark);
+      text-decoration: none; border-bottom: 1px solid var(--border); transition: background 0.2s;
+    }
+    .dropdown-menu a:hover { background: var(--body-bg); color: var(--green-dark); }
+    .dropdown-menu a.text-red { color: #ef4444; border-bottom: none; }
+    .dropdown-menu a.text-red:hover { background: #fef2f2; color: #dc2626; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand" style="text-decoration: none;">🍏 GreenBite</a>
+      <div class="nav-links">
+        <a href="#beneficios" class="nav-item">Beneficios</a>
+        <a href="catalogo.html" class="nav-item">Catálogo</a>
+        
+        <div id="auth-buttons">
+          <a href="login.html" class="btn btn-outline" style="margin-left: 10px;">Iniciar Sesión</a>
+          <a href="login.html#registro" class="btn btn-primary">Registrarse</a>
+        </div>
+
+        <div class="user-dropdown-wrapper" id="user-dropdown-wrapper">
+          <div class="user-badge" onclick="toggleMenu(event)">
+            <div style="text-align: right; line-height: 1.2;">
+              <div id="nav-user-name" style="font-weight: 700; color: var(--green-dark); font-size: 13px;">Nombre</div>
+              <div id="nav-user-email" style="font-size: 11px; color: var(--green-dark); opacity: 0.8;">correo</div>
+            </div>
+            <div id="nav-user-avatar" style="width: 32px; height: 32px; background: white; color: var(--green-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;"></div>
+          </div>
+          
+          <div class="dropdown-menu" id="dropdown-menu">
+            <a href="#" id="dropdown-perfil">👤 Mi Perfil</a>
+            <a href="#" class="text-red" onclick="cerrarSesionRapida()">🚪 Cerrar Sesión</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Transforma tu vida con nutrición inteligente</h1>
+      <p>La plataforma integral para gestionar planes nutricionales, conectar pacientes con profesionales y lograr un estilo de vida saludable.</p>
+      <div>
+        <a href="login.html#registro" id="hero-cta-btn" class="btn btn-primary" style="margin-right: 10px;">Comenzar ahora</a> 
+        <a href="catalogo.html" class="btn btn-outline">Ver Planes</a>
+      </div>
+    </section>
+
+    <section id="catalogo" class="catalog-section">
+      <h2 class="section-title">Nuestros Enfoques</h2>
+      <p style="text-align: center; color: var(--text-mid); margin-top: -30px; margin-bottom: 40px;">Una muestra de los planes que adaptamos para ti.</p>
+      <div class="grid-3" id="catalogo-preview"></div>
+      <div style="text-align: center; margin-top: 40px;"><a href="catalogo.html" class="btn btn-primary">Ver el Catálogo Completo</a></div>
+    </section>
+  </main>
+
+  <div class="modal-overlay" id="modal-detalle" onclick="cerrarModal(event)">
+    <div class="modal">
+      <button class="modal-close" onclick="cerrarModal()">&times;</button>
+      <span class="plan-badge" id="m-badge" style="margin-bottom: 10px;"></span>
+      <h2 id="m-titulo">Título del Plan</h2>
+      <p id="m-desc" style="color: var(--text-mid); font-size: 14px; line-height: 1.6;"></p>
+      <h3 style="margin-top: 25px; font-size: 14px; color: var(--text-dark);">Distribución de Macros</h3>
+      <div class="modal-macro-grid">
+        <div class="modal-macro-box"><strong id="m-prot">0%</strong><span>Proteínas</span></div>
+        <div class="modal-macro-box"><strong id="m-carb">0%</strong><span>Carbohidratos</span></div>
+        <div class="modal-macro-box"><strong id="m-gras">0%</strong><span>Grasas</span></div>
+      </div>
+      <div style="margin-top: 30px;">
+        <a href="login.html#registro" id="modal-cta-btn" class="btn btn-primary" style="width: 100%; display: block; text-align: center;">Registrarse para solicitar</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer"><div class="container"><p style="font-weight: 600; color: var(--green-dark); margin-bottom: 10px;">🍏 GreenBite</p><p>Proyecto UTP.</p></div></footer>
+
+  <script>
+    let dbPlantillas = [];
+
+    // --- LÓGICA DEL MENÚ DESPLEGABLE ---
+    function toggleMenu(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('dropdown-menu').classList.toggle('show');
+    }
+
+    window.onclick = function(e) {
+      if (!e.target.closest('.user-dropdown-wrapper')) {
+        let menu = document.getElementById('dropdown-menu');
+        if (menu && menu.classList.contains('show')) menu.classList.remove('show');
+      }
+    };
+
+    function cerrarSesionRapida() {
+      localStorage.removeItem('usuario_actual');
+      window.location.reload();
+    }
+
+    function verificarSesion() {
+      let usuarioActual = JSON.parse(localStorage.getItem('usuario_actual'));
+      if (usuarioActual) {
+        document.getElementById('auth-buttons').style.display = 'none';
+        document.getElementById('user-dropdown-wrapper').style.display = 'inline-block';
+        
+        document.getElementById('nav-user-name').innerText = usuarioActual.nombre;
+        let iniciales = usuarioActual.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        document.getElementById('nav-user-avatar').innerText = iniciales;
+
+        let dashboardLink = 'paciente_dashboard.html';
+        let emailText = usuarioActual.email || 'Admin';
+
+        if (usuarioActual.rol === 'Nutricionista Administradora') {
+          dashboardLink = 'admin_dashboard.html';
+          emailText = 'admin@greenbite.com';
+        }
+
+        document.getElementById('nav-user-email').innerText = emailText;
+        document.getElementById('dropdown-perfil').href = dashboardLink;
+
+        let heroBtn = document.getElementById('hero-cta-btn');
+        if(heroBtn) { heroBtn.innerText = "Ir a mi Panel"; heroBtn.href = dashboardLink; }
+        
+        let modalBtn = document.getElementById('modal-cta-btn');
+        if(modalBtn) { 
+          modalBtn.innerText = (usuarioActual.rol === 'Nutricionista Administradora') ? "Ir a Editar Plantillas" : "Solicitar desde mi Perfil"; 
+          modalBtn.href = (usuarioActual.rol === 'Nutricionista Administradora') ? "admin_plantillas.html" : dashboardLink;
+        }
+      }
+    }
+
+    function cargarDatos() {
+      dbPlantillas = JSON.parse(localStorage.getItem('db_plantillas')) || [];
+      renderizarPreview();
+    }
+
+    window.onload = function() {
+      verificarSesion();
+      let inicializado = localStorage.getItem('app_inicializada');
+      if (!inicializado) {
+        const plantillasPorDefecto = [
+          { id: 1, nombre: "Déficit Sostenible", objetivo: "peso", desc: "Enfoque balanceado que no elimina ningún grupo alimenticio. Ideal para perder grasa corporal sin ansiedad.", prot: 30, carb: 40, gras: 30 },
+          { id: 2, nombre: "Equilibrio Verde", objetivo: "eco", desc: "Plan 100% basado en plantas. Rico en antioxidantes y proteínas vegetales para un bienestar integral.", prot: 20, carb: 50, gras: 30 },
+          { id: 3, nombre: "Keto Avanzado", objetivo: "keto", desc: "Alta ingesta de grasas saludables y muy baja en carbohidratos para activar la quema de grasa eficiente.", prot: 25, carb: 5, gras: 70 }
+        ];
+        localStorage.setItem('db_plantillas', JSON.stringify(plantillasPorDefecto));
+        localStorage.setItem('app_inicializada', 'true');
+      }
+      cargarDatos();
+    };
+
+    window.addEventListener('storage', function(e) {
+      if (e.key === 'db_plantillas') cargarDatos();
+      if (e.key === 'usuario_actual') window.location.reload(); 
+    });
+
+    function renderizarPreview() {
+      const grid = document.getElementById('catalogo-preview');
+      grid.innerHTML = "";
+      if(dbPlantillas.length === 0) {
+        grid.innerHTML = "<div style='grid-column: span 3; text-align: center; color: var(--text-mid);'>Catálogo en mantenimiento.</div>";
+        return;
+      }
+      let preview = dbPlantillas.slice(0, 3);
+      preview.forEach(pl => {
+        let badgeClass = pl.objetivo === 'peso' ? 'badge-peso' : pl.objetivo === 'keto' ? 'badge-keto' : 'badge-eco';
+        let badgeText = pl.objetivo === 'peso' ? 'Pérdida de Peso' : pl.objetivo === 'keto' ? 'Keto' : pl.objetivo === 'eco' ? 'Vegano' : 'Mantenimiento';
+        grid.innerHTML += `<div class="plan-card" style="cursor:pointer;" onclick="abrirDetalle(${pl.id})"><span class="plan-badge ${badgeClass}">${badgeText}</span><h3>${pl.nombre}</h3><p>${pl.desc}</p><button class="btn btn-outline" style="width: 100%; margin-top: 15px;">Ver detalles</button></div>`;
+      });
+    }
+
+    function abrirDetalle(id) {
+      let pl = dbPlantillas.find(item => item.id === id);
+      if(!pl) return;
+      let badgeClass = pl.objetivo === 'peso' ? 'badge-peso' : pl.objetivo === 'keto' ? 'badge-keto' : 'badge-eco';
+      let badgeText = pl.objetivo === 'peso' ? 'Pérdida de Peso' : pl.objetivo === 'keto' ? 'Keto' : pl.objetivo === 'eco' ? 'Vegano' : 'Mantenimiento';
+      document.getElementById('m-badge').className = `plan-badge ${badgeClass}`;
+      document.getElementById('m-badge').innerText = badgeText;
+      document.getElementById('m-titulo').innerText = pl.nombre;
+      document.getElementById('m-desc').innerText = pl.desc;
+      document.getElementById('m-prot').innerText = pl.prot + "%";
+      document.getElementById('m-carb').innerText = pl.carb + "%";
+      document.getElementById('m-gras').innerText = pl.gras + "%";
+      document.getElementById('modal-detalle').classList.add('open');
+    }
+
+    function cerrarModal(e) { if (e && e.target !== document.getElementById('modal-detalle')) return; document.getElementById('modal-detalle').classList.remove('open'); }
+  </script>
+</body>
+</html>

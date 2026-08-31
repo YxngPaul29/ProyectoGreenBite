@@ -1,0 +1,386 @@
+/* ============================================================
+   GreenBite – Sistema de Gestión Nutricional
+   Archivo Base de Estilos
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* ── Variables Globales ── */
+:root {
+  --green:        #1a9e5c;
+  --green-dark:   #158048;
+  --green-light:  #e8f7f0;
+  --body-bg:      #f4f6f8;
+  --text-dark:    #1a1f2e;
+  --text-mid:     #4b5563;
+  --border:       #e5e7eb;
+  --radius:       10px;
+  --font:         'Plus Jakarta Sans', sans-serif;
+  --transition:   0.2s ease;
+}
+
+/* ── Reset Básico ── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font);
+  background-color: var(--body-bg);
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── Botones ── */
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition);
+  text-align: center;
+}
+
+.btn-primary {
+  background-color: var(--green);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--green-dark);
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--green);
+  border: 2px solid var(--green);
+}
+
+.btn-outline:hover {
+  background-color: var(--green-light);
+}
+
+/* ── Utilidades ── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ── Secciones Promocionales (Landing Page) ── */
+.features {
+  padding: 80px 20px;
+  background-color: white;
+  margin-top: 40px;
+  border-radius: var(--radius);
+}
+
+.section-title {
+  text-align: center;
+  font-size: 32px;
+  color: var(--green-dark);
+  margin-bottom: 50px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.feature-card {
+  text-align: center;
+  padding: 40px 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: transform var(--transition), border-color var(--transition);
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--green);
+}
+
+.feature-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.feature-card h3 {
+  color: var(--green-dark);
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+.feature-card p {
+  color: var(--text-mid);
+  font-size: 15px;
+}
+
+/* ── Llamado a la Acción (CTA) ── */
+.cta-section {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: var(--green-light);
+  margin-top: 40px;
+  border-radius: var(--radius);
+}
+
+.cta-section h2 {
+  color: var(--green-dark);
+  margin-bottom: 20px;
+}
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  padding: 40px 20px;
+  margin-top: 60px;
+  color: var(--text-mid);
+  font-size: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* ============================================================
+   ESTILOS DE PANELES (DASHBOARDS)
+   ============================================================ */
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--body-bg);
+}
+
+/* ── Menú Lateral (Sidebar) ── */
+.sidebar {
+  width: 260px;
+  background-color: white;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 20px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green-dark);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-menu {
+  padding: 20px 0;
+  flex: 1;
+}
+
+.menu-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  font-weight: 700;
+  padding: 0 20px;
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+}
+
+.menu-item {
+  display: block;
+  padding: 12px 20px;
+  color: var(--text-mid);
+  font-weight: 600;
+  font-size: 14px;
+  transition: all var(--transition);
+  border-left: 4px solid transparent;
+}
+
+.menu-item:hover {
+  background-color: var(--body-bg);
+  color: var(--green-dark);
+}
+
+.menu-item.active {
+  background-color: var(--green-light);
+  color: var(--green-dark);
+  border-left: 4px solid var(--green);
+}
+
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.menu-logout {
+  color: #ef4444;
+}
+
+/* ── Contenido Principal ── */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Barra Superior */
+.topbar {
+  background-color: white;
+  padding: 15px 30px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topbar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: right;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.user-role {
+  font-size: 12px;
+  color: var(--text-mid);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: var(--green);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+/* Área de trabajo y Tarjetas */
+.content-area {
+  padding: 30px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  border: 1px solid var(--border);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-green { background-color: var(--green-light); color: var(--green-dark); }
+.badge-gray { background-color: var(--body-bg); color: var(--text-mid); }
+
+/* ── Catálogo de Planes (Landing Page) ── */
+.catalog-section {
+  padding: 80px 20px;
+  background-color: var(--body-bg); /* Fondo gris claro para contrastar */
+  border-radius: var(--radius);
+  margin-top: 40px;
+}
+
+.plan-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 30px 25px;
+  transition: transform var(--transition), box-shadow var(--transition);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.plan-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+  border-color: var(--green);
+}
+
+.plan-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 15px;
+  align-self: flex-start;
+}
+
+/* Colores para las etiquetas de los planes */
+.badge-keto { background-color: #e0e7ff; color: #4338ca; }
+.badge-eco  { background-color: #f3e8ff; color: #7e22ce; }
+.badge-peso { background-color: #ffedd5; color: #c2410c; }
+
+.plan-card h3 {
+  font-size: 22px;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+
+.plan-card p {
+  font-size: 14px;
+  color: var(--text-mid);
+  margin-bottom: 20px;
+  flex-grow: 1; /* Mantiene el botón siempre abajo alineado */
+}
+
+.plan-features {
+  list-style: none;
+  margin-bottom: 25px;
+  font-size: 13px;
+  color: var(--text-mid);
+}
+
+.plan-features li {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-features li::before {
+  content: "✓";
+  color: var(--green);
+  font-weight: 700;
+}

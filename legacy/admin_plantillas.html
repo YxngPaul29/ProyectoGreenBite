@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenBite | Gestión de Plantillas</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .editor-layout { display: grid; grid-template-columns: 1fr 350px; gap: 20px; align-items: start; }
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 10px 15px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: var(--font); outline: none; transition: border-color var(--transition); background-color: var(--body-bg); }
+    .form-control:focus { border-color: var(--green); background-color: white; }
+    .macro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
+    .macro-box { background: white; border: 1px solid var(--border); padding: 15px 10px; border-radius: var(--radius-sm); text-align: center; }
+    .macro-box span { display: block; font-size: 11px; color: var(--text-light); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 5px; }
+    .macro-input-wrapper { display: flex; align-items: center; justify-content: center; gap: 2px; }
+    .macro-input-wrapper input { width: 40px; text-align: center; border: none; border-bottom: 2px solid var(--border); background: transparent; font-size: 18px; font-weight: 700; color: var(--green-dark); outline: none; transition: border-color var(--transition); }
+    .macro-input-wrapper input:focus { border-color: var(--green); }
+    .section-title { font-size: 18px; font-weight: 700; color: var(--green-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .template-item { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all var(--transition); }
+    .template-item:hover { background-color: var(--body-bg); }
+    .template-title { font-weight: 700; font-size: 14px; color: var(--text-dark); margin-bottom: 4px; }
+    .template-desc { font-size: 12px; color: var(--text-mid); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-layout">
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-header" style="display: flex; text-decoration: none;">🍏 GreenBite</a>
+    <div class="sidebar-menu">
+      <div class="menu-label">Principal</div>
+      <a href="admin_dashboard.html" class="menu-item">Dashboard</a>
+      <div class="menu-label" style="margin-top: 20px;">Gestión Clínica</div>
+      <a href="admin_pacientes.html" class="menu-item">Mis Pacientes</a>
+      <a href="admin_plantillas.html" class="menu-item active">Plantillas de Dietas</a>
+      <a href="admin_asignar.html" class="menu-item">Asignar Plan</a>
+    </div>
+    <!-- CORRECCIÓN DEL BOTÓN -->
+    <div class="sidebar-footer"><a href="index.html" class="menu-item menu-logout" onclick="cerrarSesion()">Cerrar Sesión</a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-title">Catálogo y Plantillas</div>
+      <div class="user-profile">
+        <div><div class="user-name">Dra. Ana Torres</div><div class="user-role">Nutricionista Administradora</div></div>
+        <div class="user-avatar">AT</div>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div class="editor-layout">
+        <div class="card">
+          <h2 class="section-title" id="form-titulo">Crear Nueva Plantilla</h2>
+          <form onsubmit="guardarPlantilla(event)">
+            <input type="hidden" id="pl-id">
+            <div class="form-group"><label class="form-label">Nombre del Plan</label><input type="text" id="pl-nombre" class="form-control" required></div>
+            <div class="form-group">
+              <label class="form-label">Objetivo Principal</label>
+              <select id="pl-objetivo" class="form-control" required><option value="">-- Selecciona un objetivo --</option><option value="peso">Pérdida de Peso / Déficit</option><option value="musculo">Aumento de Masa Muscular</option><option value="eco">Plan Vegano / Basado en Plantas</option><option value="keto">Enfoque Keto</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Descripción corta</label><textarea id="pl-desc" class="form-control" rows="3" required></textarea></div>
+            <label class="form-label" style="margin-top: 25px;">Distribución de Macros (%)</label>
+            <div class="macro-grid">
+              <div class="macro-box"><span>Proteínas</span><div class="macro-input-wrapper"><input type="number" id="pl-prot" min="0" max="100" required> %</div></div>
+              <div class="macro-box"><span>Carbohidratos</span><div class="macro-input-wrapper"><input type="number" id="pl-carb" min="0" max="100" required> %</div></div>
+              <div class="macro-box"><span>Grasas</span><div class="macro-input-wrapper"><input type="number" id="pl-gras" min="0" max="100" required> %</div></div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+              <button type="button" class="btn btn-outline" style="border: none; color: #ef4444; display: none;" id="btn-eliminar" onclick="eliminarPlantilla()">Eliminar</button>
+              <button type="button" class="btn btn-outline" style="border: none; color: var(--text-mid);" onclick="limpiarFormulario()">Limpiar / Nuevo</button>
+              <button type="submit" class="btn btn-primary">Guardar Plantilla</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div style="padding: 20px 20px 0 20px;"><h2 class="section-title" style="margin-bottom: 0;">Plantillas Guardadas</h2></div>
+          <div id="lista-plantillas" style="overflow-y: auto; max-height: 600px;"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  // CORRECCIÓN DE LA FUNCIÓN
+  function cerrarSesion() { localStorage.removeItem('usuario_actual'); }
+
+  const plantillasPorDefecto = [
+    { id: 1, nombre: "Déficit Sostenible", objetivo: "peso", desc: "Enfoque balanceado que no elimina ningún grupo alimenticio. Ideal para perder grasa corporal sin ansiedad.", prot: 30, carb: 40, gras: 30 },
+    { id: 2, nombre: "Equilibrio Verde", objetivo: "eco", desc: "Plan 100% basado en plantas. Rico en antioxidantes y proteínas vegetales para un bienestar integral.", prot: 20, carb: 50, gras: 30 },
+    { id: 3, nombre: "Keto Avanzado", objetivo: "keto", desc: "Alta ingesta de grasas saludables y muy baja en carbohidratos para activar la quema de grasa eficiente.", prot: 25, carb: 5, gras: 70 }
+  ];
+
+  window.onload = function() {
+    let inicializado = localStorage.getItem('app_inicializada');
+    if (!inicializado) {
+      localStorage.setItem('db_plantillas', JSON.stringify(plantillasPorDefecto));
+      localStorage.setItem('app_inicializada', 'true');
+    }
+    renderizarLista();
+  };
+
+  function renderizarLista() {
+    let db = JSON.parse(localStorage.getItem('db_plantillas')) || [];
+    const lista = document.getElementById('lista-plantillas');
+    lista.innerHTML = "";
+    
+    if (db.length === 0) {
+      lista.innerHTML = `<div style="padding: 30px 20px; text-align: center; color: var(--text-light);"><div style="font-size: 32px; margin-bottom: 10px;">📄</div><p>Catálogo vacío</p></div>`;
+      return;
+    }
+
+    db.forEach(pl => {
+      lista.innerHTML += `<div class="template-item" onclick="cargarParaEditar(${pl.id})"><div class="template-title">${pl.nombre}</div><div class="template-desc">${pl.desc}</div></div>`;
+    });
+  }
+
+  function cargarParaEditar(id) {
+    let db = JSON.parse(localStorage.getItem('db_plantillas')) || [];
+    let pl = db.find(item => item.id === id);
+    document.getElementById('pl-id').value = pl.id; document.getElementById('pl-nombre').value = pl.nombre; document.getElementById('pl-objetivo').value = pl.objetivo; document.getElementById('pl-desc').value = pl.desc; document.getElementById('pl-prot').value = pl.prot; document.getElementById('pl-carb').value = pl.carb; document.getElementById('pl-gras').value = pl.gras;
+    document.getElementById('form-titulo').innerText = "Editando: " + pl.nombre;
+    document.getElementById('btn-eliminar').style.display = 'inline-block';
+  }
+
+  function limpiarFormulario() {
+    document.getElementById('pl-id').value = ""; document.getElementById('pl-nombre').value = ""; document.getElementById('pl-objetivo').value = ""; document.getElementById('pl-desc').value = ""; document.getElementById('pl-prot').value = ""; document.getElementById('pl-carb').value = ""; document.getElementById('pl-gras').value = "";
+    document.getElementById('form-titulo').innerText = "Crear Nueva Plantilla";
+    document.getElementById('btn-eliminar').style.display = 'none';
+  }
+
+  function eliminarPlantilla() {
+    let currentId = document.getElementById('pl-id').value;
+    if (!currentId) return;
+    if (confirm("¿Seguro que deseas eliminar esta plantilla del catálogo?")) {
+      let db = JSON.parse(localStorage.getItem('db_plantillas')) || [];
+      db = db.filter(item => item.id != currentId); 
+      localStorage.setItem('db_plantillas', JSON.stringify(db));
+      alert("Plantilla eliminada exitosamente.");
+      renderizarLista(); limpiarFormulario();
+    }
+  }
+
+  function guardarPlantilla(e) {
+    e.preventDefault();
+    let db = JSON.parse(localStorage.getItem('db_plantillas')) || [];
+    let currentId = document.getElementById('pl-id').value;
+    let newData = { nombre: document.getElementById('pl-nombre').value, objetivo: document.getElementById('pl-objetivo').value, desc: document.getElementById('pl-desc').value, prot: document.getElementById('pl-prot').value, carb: document.getElementById('pl-carb').value, gras: document.getElementById('pl-gras').value };
+
+    if (currentId) {
+      let index = db.findIndex(item => item.id == currentId);
+      db[index] = { ...db[index], ...newData, id: parseInt(currentId) };
+      alert("¡Plantilla actualizada correctamente!");
+    } else {
+      newData.id = Date.now(); db.push(newData);
+      alert("¡Nueva plantilla agregada al catálogo!");
+    }
+    localStorage.setItem('db_plantillas', JSON.stringify(db));
+    renderizarLista(); limpiarFormulario();
+  }
+</script>
+</body>
+</html>

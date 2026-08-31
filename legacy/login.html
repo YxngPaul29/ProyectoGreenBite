@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenBite | Acceso</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, var(--green-light) 0%, var(--body-bg) 100%); }
+    .auth-wrapper { width: 100%; max-width: 420px; padding: 20px; }
+    .back-link { display: inline-block; margin-bottom: 20px; color: var(--green-dark); font-weight: 600; font-size: 14px; transition: opacity var(--transition); }
+    .back-link:hover { opacity: 0.7; }
+    .auth-card { background: white; padding: 40px 30px; border-radius: var(--radius); box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid var(--border); }
+    .auth-header { text-align: center; margin-bottom: 30px; }
+    .auth-header h2 { color: var(--green-dark); font-size: 24px; }
+    .tabs { display: flex; margin-bottom: 25px; border-bottom: 2px solid var(--border); }
+    .tab { flex: 1; text-align: center; padding: 10px 0; font-weight: 600; color: var(--text-mid); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all var(--transition); }
+    .tab.active { color: var(--green); border-bottom-color: var(--green); }
+    .form-group { margin-bottom: 20px; text-align: left; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-mid); margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: var(--font); outline: none; transition: border-color var(--transition); }
+    .form-control:focus { border-color: var(--green); }
+    .btn-full { width: 100%; padding: 12px; font-size: 16px; }
+    #form-registro { display: none; }
+    
+    /* Mensaje de error */
+    .error-msg {
+      background-color: var(--red-soft);
+      color: var(--red);
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 20px;
+      display: none; /* Oculto por defecto */
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-wrapper">
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+
+    <div class="auth-card">
+      <div class="auth-header"><h2>🍏 GreenBite</h2></div>
+
+      <div class="tabs">
+        <div class="tab active" id="tab-login" onclick="cambiarPestana('login')">Iniciar Sesión</div>
+        <div class="tab" id="tab-registro" onclick="cambiarPestana('registro')">Registrarse</div>
+      </div>
+
+      <div id="error-box" class="error-msg"></div>
+
+      <form id="form-login" onsubmit="procesarAcceso(event, 'login')">
+        <div class="form-group">
+          <label class="form-label">Correo Electrónico</label>
+          <input type="email" id="login-email" class="form-control" placeholder="ejemplo@correo.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña</label>
+          <input type="password" id="login-pass" class="form-control" placeholder="••••••••" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de Usuario</label>
+          <select class="form-control" id="tipo-usuario-login">
+            <option value="paciente">Paciente</option>
+            <option value="nutricionista">Nutricionista / Administrador</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Ingresar</button>
+      </form>
+
+      <form id="form-registro" onsubmit="procesarAcceso(event, 'registro')">
+        <div class="form-group">
+          <label class="form-label">Nombre Completo</label>
+          <input type="text" id="reg-nombre" class="form-control" placeholder="Ej. Carlos Mendoza" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo Electrónico</label>
+          <input type="email" id="reg-email" class="form-control" placeholder="ejemplo@correo.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Crea una Contraseña</label>
+          <input type="password" id="reg-pass" class="form-control" placeholder="Mínimo 8 caracteres" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Crear Cuenta</button>
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    function cambiarPestana(accion) {
+      document.getElementById('form-login').style.display = accion === 'login' ? 'block' : 'none';
+      document.getElementById('form-registro').style.display = accion === 'registro' ? 'block' : 'none';
+      document.getElementById('tab-login').className = accion === 'login' ? 'tab active' : 'tab';
+      document.getElementById('tab-registro').className = accion === 'registro' ? 'tab active' : 'tab';
+      ocultarError();
+    }
+
+    function mostrarError(mensaje) {
+      const errorBox = document.getElementById('error-box');
+      errorBox.innerText = mensaje;
+      errorBox.style.display = 'block';
+    }
+
+    function ocultarError() {
+      document.getElementById('error-box').style.display = 'none';
+    }
+
+    function procesarAcceso(event, tipo) {
+      event.preventDefault();
+      ocultarError();
+
+      if (tipo === 'login') {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+        const rol = document.getElementById('tipo-usuario-login').value;
+        
+        // 1. LÓGICA DEL ADMINISTRADOR (Nutricionista)
+        if (rol === 'nutricionista') {
+          // CREDENCIALES OFICIALES DE LA NUTRICIONISTA
+          if (email === 'admin@greenbite.com' && pass === 'admin123') {
+            let adminProfile = { nombre: "Dra. Ana Torres", rol: "Nutricionista Administradora" };
+            localStorage.setItem('usuario_actual', JSON.stringify(adminProfile));
+            window.location.href = 'admin_dashboard.html';
+          } else {
+            // Se le deniega el acceso
+            mostrarError("❌ Credenciales de administrador incorrectas.");
+          }
+        } 
+        
+        // 2. LÓGICA DEL PACIENTE
+        else {
+          let pacientes = JSON.parse(localStorage.getItem('db_pacientes')) || [];
+          
+          // Busca que coincida TANTO el correo COMO la contraseña
+          let pacienteEncontrado = pacientes.find(p => p.email === email && p.password === pass);
+
+          if (pacienteEncontrado) {
+            // Guardar la sesión y dejarlo entrar
+            localStorage.setItem('usuario_actual', JSON.stringify(pacienteEncontrado));
+            window.location.href = 'paciente_dashboard.html';
+          } else {
+            // Se le deniega el acceso si algo está mal o no existe
+            mostrarError("❌ Correo o contraseña incorrectos. Si no tienes cuenta, regístrate.");
+          }
+        }
+      } 
+      
+      // 3. LÓGICA DE REGISTRO DE PACIENTE NUEVO
+      else if (tipo === 'registro') {
+        const nombre = document.getElementById('reg-nombre').value;
+        const email = document.getElementById('reg-email').value;
+        const pass = document.getElementById('reg-pass').value; // Se captura la contraseña
+        let pacientes = JSON.parse(localStorage.getItem('db_pacientes')) || [];
+
+        // Evitar correos duplicados
+        if (pacientes.find(p => p.email === email)) {
+          mostrarError("⚠️ Este correo ya está registrado en el sistema.");
+          return;
+        }
+
+        // Se guarda el paciente incluyendo su contraseña en la base de datos local
+        let nuevoPaciente = { 
+          id: Date.now(), 
+          nombre: nombre, 
+          email: email, 
+          password: pass, // <-- ¡La contraseña se guarda aquí!
+          edad: 0, 
+          sexo: "M", 
+          peso: 0, 
+          altura: 0, 
+          objetivo: "sana", 
+          estado: "Reciente" 
+        };
+        
+        pacientes.push(nuevoPaciente);
+        localStorage.setItem('db_pacientes', JSON.stringify(pacientes));
+
+        alert('¡Cuenta creada exitosamente! Por favor, inicia sesión con tus datos.');
+        document.getElementById('form-registro').reset();
+        document.getElementById('login-email').value = email; // Le autocompleta el correo por comodidad
+        cambiarPestana('login'); 
+      }
+    }
+
+    window.onload = function() {
+      if (window.location.hash === '#registro') cambiarPestana('registro');
+    };
+  </script>
+</body>
+</html>

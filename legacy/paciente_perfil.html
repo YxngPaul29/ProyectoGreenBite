@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenBite | Mi Perfil de Salud</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Estilos exclusivos para el Perfil de Salud ── */
+    .profile-hero {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 40px 30px;
+      color: white;
+      text-align: center;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      background: white;
+      color: var(--green-dark);
+      font-size: 32px;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px auto;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .profile-card {
+      background: white;
+      border-radius: 0 0 var(--radius) var(--radius);
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 40px;
+      max-width: 800px;
+      margin: 0 auto 40px auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+
+    /* Formulario */
+    .form-section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-group { margin-bottom: 24px; }
+    .form-label { display: block; font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 8px; }
+    .form-control {
+      width: 100%; padding: 12px 15px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; font-family: var(--font); outline: none; transition: border-color var(--transition);
+      background-color: var(--body-bg);
+    }
+    .form-control:focus { border-color: var(--green); background-color: white; }
+
+    /* Objetivos (Tiles clickeables) */
+    .obj-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .obj-tile {
+      background: var(--body-bg); border: 2px solid transparent; border-radius: var(--radius-sm);
+      padding: 20px 10px; text-align: center; cursor: pointer; transition: all var(--transition);
+    }
+    .obj-tile:hover { background: var(--green-light); }
+    .obj-tile.selected { background: var(--green-light); border-color: var(--green); }
+    .obj-tile-icon { font-size: 32px; margin-bottom: 10px; }
+    .obj-tile-label { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-layout">
+  
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-header" style="display: flex; text-decoration: none;">🍏 GreenBite</a>
+    
+    <div class="sidebar-menu">
+      <div class="menu-label">Mi Espacio</div>
+      <a href="paciente_dashboard.html" class="menu-item">Inicio</a>
+      <a href="paciente_perfil.html" class="menu-item active">Mi Perfil de Salud</a>
+      <a href="paciente_mis_dietas.html" class="menu-item">Mis Dietas</a>
+      
+      <div class="menu-label" style="margin-top: 20px;">Explorar</div>
+      <a href="paciente_catalogo.html" class="menu-item">Catálogo de Planes</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="menu-item menu-logout" onclick="cerrarSesion()">Cerrar Sesión</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    
+    <header class="topbar">
+      <div class="topbar-title">Configuración Médica</div>
+      <div class="user-profile">
+        <div>
+          <div class="user-name" id="nav-user-name">Cargando...</div>
+          <div class="user-role">Paciente Registrado</div>
+        </div>
+        <div class="user-avatar" id="nav-user-avatar" style="background-color: var(--blue);">--</div>
+      </div>
+    </header>
+
+    <main class="content-area">
+      
+      <div style="max-width: 800px; margin: 0 auto;">
+        <div class="profile-hero">
+          <div class="profile-avatar" id="hero-avatar">--</div>
+          <h1 style="font-size: 24px; margin-bottom: 5px;" id="hero-nombre">Cargando...</h1>
+          <p style="font-size: 14px; opacity: 0.9;" id="hero-email">correo@ejemplo.com</p>
+        </div>
+
+        <div class="profile-card">
+          
+          <div class="form-section-title">Datos Antropométricos</div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Peso Actual (kg) <span style="color:var(--red)">*</span></label>
+              <input type="number" id="f-peso" class="form-control" placeholder="Ej. 75">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Altura (cm) <span style="color:var(--red)">*</span></label>
+              <input type="number" id="f-altura" class="form-control" placeholder="Ej. 175">
+            </div>
+          </div>
+
+          <div class="form-section-title" style="margin-top: 10px;">Objetivo Nutricional</div>
+          <div class="form-group">
+            <label class="form-label">¿Qué deseas lograr? <span style="color:var(--red)">*</span></label>
+            <div class="obj-tiles">
+              <div class="obj-tile" data-val="bajar" onclick="seleccionarObjetivo(this)">
+                <div class="obj-tile-icon">📉</div>
+                <div class="obj-tile-label">Perder Grasa</div>
+              </div>
+              <div class="obj-tile" data-val="musculo" onclick="seleccionarObjetivo(this)">
+                <div class="obj-tile-icon">💪</div>
+                <div class="obj-tile-label">Ganar Músculo</div>
+              </div>
+              <div class="obj-tile" data-val="sana" onclick="seleccionarObjetivo(this)">
+                <div class="obj-tile-icon">🥗</div>
+                <div class="obj-tile-label">Vida Sana</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 40px; text-align: right; border-top: 1px solid var(--border); padding-top: 20px;">
+            <button class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;" onclick="guardarPerfil()">
+              Guardar Perfil de Salud
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  let usuarioActual = null;
+
+  window.onload = function() {
+    usuarioActual = JSON.parse(localStorage.getItem('usuario_actual'));
+    
+    // Si no hay sesión, pa' fuera
+    if (!usuarioActual) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // 1. Cargar datos visuales de la barra superior y hero
+    document.getElementById('nav-user-name').innerText = usuarioActual.nombre;
+    document.getElementById('hero-nombre').innerText = usuarioActual.nombre;
+    document.getElementById('hero-email').innerText = usuarioActual.email;
+    
+    let iniciales = usuarioActual.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    document.getElementById('nav-user-avatar').innerText = iniciales;
+    document.getElementById('hero-avatar').innerText = iniciales;
+
+    // 2. Llenar el formulario si ya tenía datos previos
+    if(usuarioActual.peso > 0) document.getElementById('f-peso').value = usuarioActual.peso;
+    if(usuarioActual.altura > 0) document.getElementById('f-altura').value = usuarioActual.altura;
+    
+    if(usuarioActual.objetivo) {
+      let tile = document.querySelector(`.obj-tile[data-val="${usuarioActual.objetivo}"]`);
+      if(tile) seleccionarObjetivo(tile);
+    }
+  };
+
+  // Efecto visual para seleccionar objetivo
+  function seleccionarObjetivo(elemento) {
+    document.querySelectorAll('.obj-tile').forEach(el => el.classList.remove('selected'));
+    elemento.classList.add('selected');
+  }
+
+  // Guardar datos y enviarlos a la base de datos de la clínica
+  function guardarPerfil() {
+    let peso = document.getElementById('f-peso').value;
+    let altura = document.getElementById('f-altura').value;
+    let objSeleccionado = document.querySelector('.obj-tile.selected');
+
+    if (!peso || !altura || !objSeleccionado) {
+      alert("Por favor, completa tu peso, altura y selecciona un objetivo principal.");
+      return;
+    }
+
+    let objetivoVal = objSeleccionado.getAttribute('data-val');
+
+    // Actualizamos la sesión del usuario actual
+    usuarioActual.peso = parseFloat(peso);
+    usuarioActual.altura = parseFloat(altura);
+    usuarioActual.objetivo = objetivoVal;
+    
+    localStorage.setItem('usuario_actual', JSON.stringify(usuarioActual));
+
+    // MAGIA: Buscar a este paciente en la base de datos general y actualizarlo
+    let dbPacientes = JSON.parse(localStorage.getItem('db_pacientes')) || [];
+    let index = dbPacientes.findIndex(p => p.id === usuarioActual.id);
+    
+    if (index !== -1) {
+      dbPacientes[index].peso = usuarioActual.peso;
+      dbPacientes[index].altura = usuarioActual.altura;
+      dbPacientes[index].objetivo = usuarioActual.objetivo;
+      localStorage.setItem('db_pacientes', JSON.stringify(dbPacientes));
+    }
+
+    alert("¡Tus datos se actualizaron correctamente! Tu nutricionista ya puede ver tus nuevas medidas.");
+    window.location.href = "paciente_dashboard.html";
+  }
+
+  function cerrarSesion() {
+    localStorage.removeItem('usuario_actual');
+  }
+</script>
+</body>
+</html>

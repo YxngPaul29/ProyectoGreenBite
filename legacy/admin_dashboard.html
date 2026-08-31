@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenBite | Dashboard Administrador</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .hero-admin { background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%); border-radius: var(--radius); padding: 30px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .hero-admin h1 { font-size: 24px; margin-bottom: 5px; }
+    .stat-card { text-align: center; transition: transform var(--transition); }
+    .stat-card:hover { transform: translateY(-5px); border-color: var(--green); }
+    .stat-card h3 { font-size: 32px; color: var(--green-dark); margin: 10px 0 5px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+    th { color: var(--text-light); font-size: 12px; text-transform: uppercase; }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; width: 100%; max-width: 500px; border-radius: var(--radius); overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 18px; font-weight: 700; color: var(--green-dark); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-light); }
+    .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+    .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--body-bg); }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 5px; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: var(--font); }
+    
+    /* Estilos para las tarjetas de notificaciones */
+    .notif-card {
+      background: var(--body-bg);
+      border-left: 4px solid var(--green);
+      padding: 15px;
+      margin-bottom: 12px;
+      border-radius: 4px;
+    }
+    .notif-fecha { font-size: 11px; color: var(--text-light); margin-bottom: 5px; }
+    .notif-texto { font-size: 14px; color: var(--text-dark); line-height: 1.4; }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-layout">
+  
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-header" style="display: flex; text-decoration: none;">🍏 GreenBite</a>
+    <div class="sidebar-menu">
+      <div class="menu-label">Principal</div>
+      <a href="admin_dashboard.html" class="menu-item active">Dashboard</a>
+      <div class="menu-label" style="margin-top: 20px;">Gestión Clínica</div>
+      <a href="admin_pacientes.html" class="menu-item">Mis Pacientes</a>
+      <a href="admin_plantillas.html" class="menu-item">Plantillas de Dietas</a>
+      <a href="admin_asignar.html" class="menu-item">Asignar Plan</a>
+    </div>
+    <div class="sidebar-footer"><a href="index.html" class="menu-item menu-logout" onclick="cerrarSesion()">Cerrar Sesión</a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-title">Resumen General</div>
+      <div class="user-profile">
+        <div><div class="user-name">Dra. Ana Torres</div><div class="user-role">Nutricionista Administradora</div></div>
+        <div class="user-avatar">AT</div>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div class="hero-admin">
+        <div>
+          <h1>¡Bienvenida de vuelta, Ana!</h1>
+          <p>Tu clínica está lista. Empieza a registrar pacientes y crear plantillas.</p>
+        </div>
+        <button class="btn btn-outline" style="background: white; border: none; color: var(--green-dark);" onclick="abrirModal()">Añadir Paciente</button>
+      </div>
+
+      <div class="grid-3 mb-30">
+        <div class="card stat-card"><div style="font-size: 30px;">👥</div><h3 id="stat-pacientes">0</h3><p style="color: var(--text-mid); font-weight: 600;">Pacientes Activos</p></div>
+        <div class="card stat-card"><div style="font-size: 30px;">📋</div><h3 id="stat-plantillas">0</h3><p style="color: var(--text-mid); font-weight: 600;">Plantillas Base</p></div>
+        <div class="card stat-card"><div style="font-size: 30px;">✅</div><h3 style="color: var(--green);" id="stat-notif">0</h3><p style="color: var(--text-mid); font-weight: 600;">Nuevas Solicitudes</p></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2 style="font-size: 18px; color: var(--green-dark);">Pacientes Recientes</h2>
+          <table><thead><tr><th>Nombre</th><th>Objetivo</th><th>Estado</th></tr></thead><tbody id="tabla-recientes"></tbody></table>
+        </div>
+        
+        <div class="card">
+          <h2 style="font-size: 18px; color: var(--green-dark); margin-bottom: 15px;">Notificaciones</h2>
+          <!-- Aquí se inyectan las notificaciones -->
+          <div id="contenedor-notificaciones"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-agregar" onclick="cerrarModal(event)">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Registrar Nuevo Paciente</span><button class="modal-close" onclick="cerrarModal()">&times;</button></div>
+    <form onsubmit="guardarPaciente(event)">
+      <div class="modal-body">
+        <div class="grid-2"><div class="form-group"><label>Nombre Completo</label><input type="text" id="p-nombre" class="form-control" required></div><div class="form-group"><label>Correo Electrónico</label><input type="email" id="p-email" class="form-control" required></div></div>
+        <div class="grid-2"><div class="form-group"><label>Edad</label><input type="number" id="p-edad" class="form-control" required></div><div class="form-group"><label>Sexo</label><select id="p-sexo" class="form-control" required><option value="M">Masculino</option><option value="F">Femenino</option></select></div></div>
+        <div class="grid-2"><div class="form-group"><label>Peso (kg)</label><input type="number" id="p-peso" class="form-control" required></div><div class="form-group"><label>Altura (cm)</label><input type="number" id="p-altura" class="form-control" required></div></div>
+        <div class="form-group"><label>Objetivo</label><select id="p-objetivo" class="form-control" required><option value="bajar">Bajar Peso</option><option value="musculo">Masa Muscular</option><option value="sana">Vida Sana</option></select></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="cerrarModal()">Cancelar</button><button type="submit" class="btn btn-primary">Guardar Paciente</button></div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function cerrarSesion() { localStorage.removeItem('usuario_actual'); }
+  function abrirModal() { document.getElementById('modal-agregar').classList.add('open'); }
+  function cerrarModal(e) { if (e && e.target !== document.getElementById('modal-agregar')) return; document.getElementById('modal-agregar').classList.remove('open'); }
+  
+  window.onload = function() { actualizarDashboard(); };
+
+  function limpiarNotificaciones() {
+    localStorage.removeItem('db_notificaciones');
+    actualizarDashboard();
+  }
+
+  function actualizarDashboard() {
+    // 1. Estadísticas de Pacientes
+    let pacientes = JSON.parse(localStorage.getItem('db_pacientes')) || [];
+    document.getElementById('stat-pacientes').innerText = pacientes.length;
+    
+    // 2. Estadísticas de Plantillas
+    let plantillas = JSON.parse(localStorage.getItem('db_plantillas')) || [];
+    document.getElementById('stat-plantillas').innerText = plantillas.length;
+    
+    // 3. Tabla de Recientes
+    let tabla = document.getElementById('tabla-recientes');
+    if (pacientes.length === 0) {
+      tabla.innerHTML = `<tr><td colspan="3"><div class="empty-state"><div style="font-size: 24px; margin-bottom: 10px;">👤</div><p>Aún no tienes pacientes registrados.</p></div></td></tr>`;
+    } else {
+      tabla.innerHTML = "";
+      let recientes = pacientes.slice().reverse().slice(0, 3);
+      recientes.forEach(p => {
+        let objText = p.objetivo === 'bajar' ? 'Bajar Peso' : p.objetivo === 'musculo' ? 'Masa Muscular' : 'Vida Sana';
+        tabla.innerHTML += `<tr><td style="font-weight: 600; color: var(--text-dark);">${p.nombre}</td><td>${objText}</td><td><span class="badge badge-green">Activo</span></td></tr>`;
+      });
+    }
+
+    // 4. LÓGICA DE NOTIFICACIONES
+    let notificaciones = JSON.parse(localStorage.getItem('db_notificaciones')) || [];
+    let contenedorNotif = document.getElementById('contenedor-notificaciones');
+    
+    document.getElementById('stat-notif').innerText = notificaciones.length;
+
+    if (notificaciones.length === 0) {
+      contenedorNotif.innerHTML = `
+        <div class="empty-state" style="padding: 30px 20px;">
+          <div style="font-size: 24px; margin-bottom: 10px;">📭</div>
+          <p>Todo al día. No tienes notificaciones nuevas.</p>
+        </div>`;
+    } else {
+      let htmlNotif = `<div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">`;
+      
+      notificaciones.forEach(n => {
+        htmlNotif += `
+          <div class="notif-card">
+            <div class="notif-fecha">📅 ${n.fecha}</div>
+            <div class="notif-texto">
+              El paciente <strong>${n.paciente}</strong> (${n.email}) ha solicitado el plan nutricional <strong>"${n.plan}"</strong>.
+            </div>
+          </div>
+        `;
+      });
+      
+      htmlNotif += `</div>
+        <button class="btn btn-outline" style="width: 100%; margin-top: 15px; font-size: 13px; color: #ef4444; border-color: #ef4444;" onclick="limpiarNotificaciones()">
+          🗑️ Marcar todo como leído
+        </button>
+      `;
+      
+      contenedorNotif.innerHTML = htmlNotif;
+    }
+  }
+
+  function guardarPaciente(e) {
+    e.preventDefault();
+    let pacientes = JSON.parse(localStorage.getItem('db_pacientes')) || [];
+    let nuevoPaciente = { id: Date.now(), nombre: document.getElementById('p-nombre').value, email: document.getElementById('p-email').value, edad: document.getElementById('p-edad').value, sexo: document.getElementById('p-sexo').value, peso: document.getElementById('p-peso').value, altura: document.getElementById('p-altura').value, objetivo: document.getElementById('p-objetivo').value, estado: "Activo" };
+    pacientes.push(nuevoPaciente);
+    localStorage.setItem('db_pacientes', JSON.stringify(pacientes));
+    cerrarModal(); actualizarDashboard(); alert("¡Paciente guardado exitosamente!"); e.target.reset();
+  }
+</script>
+</body>
+</html>

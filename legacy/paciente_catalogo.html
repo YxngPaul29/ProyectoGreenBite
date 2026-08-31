@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenBite | Catálogo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-header" style="display: flex; text-decoration: none;">🍏 GreenBite</a>
+    <div class="sidebar-menu">
+      <div class="menu-label">Mi Espacio</div>
+      <a href="paciente_dashboard.html" class="menu-item">Inicio</a>
+      <a href="paciente_perfil.html" class="menu-item">Mi Perfil de Salud</a>
+      <a href="paciente_mis_dietas.html" class="menu-item">Mis Dietas</a>
+      <div class="menu-label" style="margin-top: 20px;">Explorar</div>
+      <a href="paciente_catalogo.html" class="menu-item active">Catálogo de Planes</a>
+    </div>
+    <div class="sidebar-footer">
+      <a href="index.html" class="menu-item menu-logout" onclick="cerrarSesion()">Cerrar Sesión</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-title">Catálogo Público</div>
+      <div class="user-profile">
+        <div>
+          <div class="user-name" id="nav-user-name">Cargando...</div>
+          <div class="user-role">Paciente Registrado</div>
+        </div>
+        <div class="user-avatar" id="nav-user-avatar" style="background-color: var(--blue);">--</div>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div style="margin-bottom: 30px;">
+        <h1 style="color: var(--green-dark); font-size: 24px; margin-bottom: 5px;">Descubre nuestros enfoques</h1>
+        <p style="color: var(--text-mid); font-size: 14px;">Estos son los planes base que nuestros profesionales utilizan para adaptar tu dieta perfecta.</p>
+      </div>
+
+      <div class="grid-3" id="catalogo-grid">
+        <!-- El JS se encarga de rellenar esto -->
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  function cerrarSesion() {
+    localStorage.removeItem('usuario_actual');
+  }
+
+  // --- NUEVA FUNCIÓN PARA ENVIAR NOTIFICACIÓN ---
+  function solicitarPlan(nombrePlan) {
+    let usuarioActual = JSON.parse(localStorage.getItem('usuario_actual'));
+    if (!usuarioActual) return;
+
+    // Leer la bandeja de notificaciones o crearla si no existe
+    let notificaciones = JSON.parse(localStorage.getItem('db_notificaciones')) || [];
+    
+    // Crear el nuevo aviso
+    let nuevoAviso = {
+      id: Date.now(),
+      paciente: usuarioActual.nombre,
+      email: usuarioActual.email,
+      plan: nombrePlan,
+      fecha: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    };
+
+    // Poner el aviso nuevo al inicio de la lista
+    notificaciones.unshift(nuevoAviso);
+    
+    // Guardar en la base de datos
+    localStorage.setItem('db_notificaciones', JSON.stringify(notificaciones));
+
+    alert(`¡Has solicitado el enfoque "${nombrePlan}"!\n\nTu nutricionista ha sido notificada y evaluará tu perfil para asignarte la dieta.`);
+  }
+
+  function cargarDatos() {
+    let dbPlantillas = JSON.parse(localStorage.getItem('db_plantillas')) || [];
+    const grid = document.getElementById('catalogo-grid');
+    grid.innerHTML = "";
+
+    if (dbPlantillas.length === 0) {
+      grid.innerHTML = `
+        <div style='grid-column: span 3; text-align: center; padding: 40px; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--text-mid);'>
+          <div style='font-size:40px; margin-bottom:10px;'>📄</div>
+          <p>No hay planes registrados en este momento. Nuestro equipo está actualizando el catálogo.</p>
+        </div>`;
+      return;
+    }
+
+    dbPlantillas.forEach(pl => {
+      let badgeClass = pl.objetivo === 'peso' ? 'badge-peso' : pl.objetivo === 'keto' ? 'badge-keto' : 'badge-eco';
+      let badgeText = pl.objetivo === 'peso' ? 'Pérdida de Peso' : pl.objetivo === 'keto' ? 'Keto' : pl.objetivo === 'eco' ? 'Vegano' : 'Mantenimiento';
+
+      // Actualizamos el botón para que dispare la función con el nombre del plan
+      grid.innerHTML += `
+        <div class="plan-card">
+          <span class="plan-badge ${badgeClass}">${badgeText}</span>
+          <h3>${pl.nombre}</h3>
+          <p>${pl.desc}</p>
+          <div style="font-size: 12px; color: var(--text-mid); margin-bottom: 20px; background: var(--body-bg); padding: 8px; border-radius: 6px; text-align: center;">
+            <strong>Macros:</strong> Prot: ${pl.prot}% | Carb: ${pl.carb}% | Gras: ${pl.gras}%
+          </div>
+          <button class="btn btn-outline" style="width: 100%;" onclick="solicitarPlan('${pl.nombre}')">Solicitar este enfoque</button>
+        </div>
+      `;
+    });
+  }
+
+  window.onload = function() {
+    let usuarioActual = JSON.parse(localStorage.getItem('usuario_actual'));
+    if (!usuarioActual) { window.location.href = 'login.html'; return; }
+
+    document.getElementById('nav-user-name').innerText = usuarioActual.nombre;
+    let iniciales = usuarioActual.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    document.getElementById('nav-user-avatar').innerText = iniciales;
+
+    cargarDatos();
+  };
+
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'db_plantillas') cargarDatos();
+  });
+</script>
+</body>
+</html>

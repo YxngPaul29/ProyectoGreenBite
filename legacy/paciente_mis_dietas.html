@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenBite | Mis Dietas</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Estilos exclusivos para la visualización del plan */
+    .plan-header-banner {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      color: white;
+      padding: 35px 30px;
+      border-radius: var(--radius);
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .plan-header-banner h1 { font-size: 26px; margin-bottom: 8px; }
+    .plan-header-banner p { font-size: 14px; opacity: 0.9; }
+    
+    .week-calendar { display: flex; flex-direction: column; gap: 16px; }
+    .day-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      transition: border-color var(--transition);
+    }
+    .day-card:hover { border-color: var(--green); }
+    
+    .day-header {
+      background: var(--body-bg);
+      padding: 18px 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .day-header:hover { background: var(--green-light); }
+    .day-name { font-size: 16px; font-weight: 700; color: var(--green-dark); }
+    
+    /* Grid para las comidas del día */
+    .day-meals-container {
+      padding: 25px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      background: white;
+    }
+    .day-card.collapsed .day-meals-container { display: none; }
+    
+    .meal-group {
+      background: var(--body-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+    }
+    .meal-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--green-light);
+      padding-bottom: 8px;
+    }
+    .meal-content {
+      font-size: 14px;
+      color: var(--text-dark);
+      line-height: 1.6;
+      white-space: pre-wrap; /* Respeta los saltos de línea */
+    }
+    
+    .empty-plan {
+      text-align: center;
+      padding: 80px 20px;
+      background: white;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--text-mid);
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-layout">
+  
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-header" style="display: flex; text-decoration: none;">🍏 GreenBite</a>
+    
+    <div class="sidebar-menu">
+      <div class="menu-label">Mi Espacio</div>
+      <a href="paciente_dashboard.html" class="menu-item">Inicio</a>
+      <a href="paciente_perfil.html" class="menu-item">Mi Perfil de Salud</a>
+      <!-- AQUÍ ESTÁ ACTIVA LA PESTAÑA DE DIETAS -->
+      <a href="paciente_mis_dietas.html" class="menu-item active">Mis Dietas</a>
+      
+      <div class="menu-label" style="margin-top: 20px;">Explorar</div>
+      <a href="paciente_catalogo.html" class="menu-item">Catálogo de Planes</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="menu-item menu-logout" onclick="cerrarSesion()">Cerrar Sesión</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    
+    <header class="topbar">
+      <div class="topbar-title">Mi Plan Nutricional</div>
+      <div class="user-profile">
+        <div>
+          <div class="user-name" id="nav-user-name">Cargando...</div>
+          <div class="user-role">Paciente Registrado</div>
+        </div>
+        <div class="user-avatar" id="nav-user-avatar" style="background-color: var(--blue);">--</div>
+      </div>
+    </header>
+
+    <main class="content-area" id="contenedor-dieta">
+      <!-- El JavaScript rellenará todo esto -->
+    </main>
+  </div>
+</div>
+
+<script>
+  window.onload = function() {
+    let usuarioActual = JSON.parse(localStorage.getItem('usuario_actual'));
+    
+    // Protección de ruta
+    if (!usuarioActual) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // Llenar datos de la barra superior
+    document.getElementById('nav-user-name').innerText = usuarioActual.nombre;
+    let iniciales = usuarioActual.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    document.getElementById('nav-user-avatar').innerText = iniciales;
+
+    // Cargar la dieta
+    renderizarPlan(usuarioActual);
+  };
+
+  function renderizarPlan(usuario) {
+    let planes = JSON.parse(localStorage.getItem(`planes_paciente_${usuario.id}`)) || [];
+    let planActivo = planes.find(pl => pl.estado === 'Activo');
+    let contenedor = document.getElementById('contenedor-dieta');
+
+    // SI NO TIENE PLAN ASIGNADO
+    if (!planActivo) {
+      contenedor.innerHTML = `
+        <div class="empty-plan">
+          <div style="font-size: 56px; margin-bottom: 20px; opacity: 0.5;">🍽️</div>
+          <h2 style="color: var(--text-dark); margin-bottom: 15px; font-size: 24px;">No tienes una dieta activa</h2>
+          <p style="max-width: 500px; margin: 0 auto 30px auto; line-height: 1.6;">
+            Aún no se te ha asignado un plan nutricional personalizado. Asegúrate de haber completado tu Perfil de Salud con tus medidas para que la nutricionista pueda evaluarte y crearte una rutina segura.
+          </p>
+          <a href="paciente_perfil.html" class="btn btn-primary" style="padding: 12px 30px;">Ir a completar mi Perfil</a>
+        </div>
+      `;
+      return;
+    }
+
+    // SI TIENE PLAN, LO DIBUJAMOS
+    let html = `
+      <div class="plan-header-banner">
+        <div>
+          <h1>${planActivo.nombre}</h1>
+          <p>Asignado el: ${planActivo.fecha}</p>
+        </div>
+        <div>
+          <span style="background: white; color: var(--green-dark); padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 13px;">
+            ✅ Plan Activo
+          </span>
+        </div>
+      </div>
+      <div class="week-calendar">
+    `;
+
+    const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+    const tiposComida = [
+      { id: "desayuno", nombre: "🍳 Desayuno" },
+      { id: "media", nombre: "🍎 Media Mañana" },
+      { id: "almuerzo", nombre: "🥗 Almuerzo" },
+      { id: "merienda", nombre: "🍪 Merienda" },
+      { id: "cena", nombre: "🍽️ Cena" }
+    ];
+
+    diasSemana.forEach(dia => {
+      let comidas = planActivo.semana[dia];
+      
+      // Hacemos que el lunes esté abierto por defecto, y los demás días colapsados
+      let colapsado = dia === "Lunes" ? "" : "collapsed";
+
+      html += `
+        <div class="day-card ${colapsado}" id="dia-${dia}">
+          <div class="day-header" onclick="document.getElementById('dia-${dia}').classList.toggle('collapsed')">
+            <div class="day-name">${dia}</div>
+            <span style="color: var(--green); font-size: 12px; font-weight: 700;">▼ DESPLEGAR</span>
+          </div>
+          <div class="day-meals-container">
+      `;
+      
+      tiposComida.forEach(c => {
+        // Si no hay comida escrita, ponemos "Libre o sin asignar"
+        let textoComida = comidas[c.id] ? comidas[c.id] : '<span style="color:var(--text-light); font-style:italic;">Libre o sin asignar</span>';
+        
+        html += `
+          <div class="meal-group">
+            <div class="meal-title">${c.nombre}</div>
+            <div class="meal-content">${textoComida}</div>
+          </div>
+        `;
+      });
+
+      html += `</div></div>`; // Cierra day-meals-container y day-card
+    });
+
+    html += `</div>`; // Cierra week-calendar
+    contenedor.innerHTML = html;
+  }
+
+  function cerrarSesion() {
+    localStorage.removeItem('usuario_actual');
+  }
+</script>
+</body>
+</html>
