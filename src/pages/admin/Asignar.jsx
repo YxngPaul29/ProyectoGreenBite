@@ -17,6 +17,7 @@ export default function Asignar() {
   const [plantillas, setPlantillas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   // Form State
   const [selectedPacienteId, setSelectedPacienteId] = useState('');
@@ -30,10 +31,17 @@ export default function Asignar() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const [pacientesData, plantillasData] = await Promise.all([getPacientes(), getPlantillas()]);
-      setPacientes(pacientesData.filter(p => p.estado === 'Activo'));
-      setPlantillas(plantillasData);
-      setLoading(false);
+      setLoadError('');
+      try {
+        const [pacientesData, plantillasData] = await Promise.all([getPacientes(), getPlantillas()]);
+        setPacientes(pacientesData.filter(p => p.estado === 'Activo'));
+        setPlantillas(plantillasData);
+      } catch (err) {
+        console.error('Error al cargar los datos de asignación:', err);
+        setLoadError(err.message || 'No se pudieron cargar pacientes y plantillas.');
+      } finally {
+        setLoading(false);
+      }
     }
     loadData();
 
@@ -116,6 +124,11 @@ export default function Asignar() {
         <Topbar title="Asignador Semanal de Dietas" />
         
         <div className="content-area">
+          {loadError && (
+            <div className="card" role="alert" style={{ marginBottom: '24px', color: 'var(--red)' }}>
+              No se pudieron cargar los datos de asignación: {loadError}
+            </div>
+          )}
           <div className="grid-2">
             
             {/* Context Settings */}

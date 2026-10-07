@@ -13,6 +13,7 @@ export default function Cotizaciones() {
   const [cotizaciones, setCotizaciones] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [activeTab, setActiveTab] = useState('cotizaciones'); // cotizaciones, pagos
   
   // Canceling a quote
@@ -20,23 +21,30 @@ export default function Cotizaciones() {
 
   const loadData = async () => {
     setLoading(true);
-    await checkExpiredCotizaciones();
+    setLoadError('');
+    try {
+      await checkExpiredCotizaciones();
 
-    const [cots, pagosData] = await Promise.all([getCotizaciones(), getPagos()]);
+      const [cots, pagosData] = await Promise.all([getCotizaciones(), getPagos()]);
 
-    // Map patient names
-    const allCots = await Promise.all(cots.map(async c => {
-      const p = await getPacienteById(c.pacienteId);
-      return { ...c, pacienteNombre: p ? p.nombre : 'Desconocido' };
-    }));
-    setCotizaciones(allCots);
+      // Map patient names
+      const allCots = await Promise.all(cots.map(async c => {
+        const p = await getPacienteById(c.pacienteId);
+        return { ...c, pacienteNombre: p ? p.nombre : 'Desconocido' };
+      }));
+      setCotizaciones(allCots);
 
-    const allPagos = await Promise.all(pagosData.map(async p => {
-      const pac = await getPacienteById(p.pacienteId);
-      return { ...p, pacienteNombre: pac ? pac.nombre : 'Desconocido' };
-    }));
-    setPagos(allPagos);
-    setLoading(false);
+      const allPagos = await Promise.all(pagosData.map(async p => {
+        const pac = await getPacienteById(p.pacienteId);
+        return { ...p, pacienteNombre: pac ? pac.nombre : 'Desconocido' };
+      }));
+      setPagos(allPagos);
+    } catch (err) {
+      console.error('Error al cargar cotizaciones y pagos:', err);
+      setLoadError(err.message || 'No se pudieron cargar cotizaciones y pagos.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -91,6 +99,11 @@ export default function Cotizaciones() {
           </div>
 
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            {loadError && (
+              <div role="alert" style={{ padding: '24px', color: 'var(--red)' }}>
+                No se pudieron cargar cotizaciones y pagos: {loadError}
+              </div>
+            )}
             {activeTab === 'cotizaciones' && (
               <div className="animate-fade-in">
                 {loading ? (

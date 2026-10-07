@@ -21,26 +21,34 @@ export default function Dashboard() {
   const [quotesCount, setQuotesCount] = useState(0);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const [plan, cumplimientoSemanal, cotizaciones, historial] = await Promise.all([
-        getPlanActivo(user.id),
-        getCumplimientoSemanal(user.id),
-        getCotizacionesByPaciente(user.id),
-        getPesoHistorial(user.id),
-      ]);
-      setPlanActivo(plan);
-      setCumplimiento(cumplimientoSemanal);
-      setQuotesCount(cotizaciones.filter(c => c.estado === 'Pendiente').length);
+      setLoadError('');
+      try {
+        const [plan, cumplimientoSemanal, cotizaciones, historial] = await Promise.all([
+          getPlanActivo(user.id),
+          getCumplimientoSemanal(user.id),
+          getCotizacionesByPaciente(user.id),
+          getPesoHistorial(user.id),
+        ]);
+        setPlanActivo(plan);
+        setCumplimiento(cumplimientoSemanal);
+        setQuotesCount(cotizaciones.filter(c => c.estado === 'Pendiente').length);
 
-      const data = historial.map(h => ({
-        fecha: new Date(h.fecha).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-        peso: h.peso
-      }));
-      setChartData(data);
-      setLoading(false);
+        const data = historial.map(h => ({
+          fecha: new Date(h.fecha).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          peso: h.peso
+        }));
+        setChartData(data);
+      } catch (err) {
+        console.error('Error al cargar el dashboard del paciente:', err);
+        setLoadError(err.message || 'No se pudo cargar el panel de progreso.');
+      } finally {
+        setLoading(false);
+      }
     }
     loadData();
   }, [user.id]);
@@ -53,6 +61,12 @@ export default function Dashboard() {
         
         <div className="content-area">
           <h1 className="section-title">Hola de nuevo, {user.nombre.split(' ')[0]} 👋</h1>
+
+          {loadError && (
+            <div className="card" role="alert" style={{ marginBottom: '24px', color: 'var(--red)' }}>
+              No se pudo cargar toda la información del panel: {loadError}
+            </div>
+          )}
 
           {loading && (
             <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-mid)' }}>Cargando...</div>

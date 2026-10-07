@@ -20,45 +20,53 @@ export default function Dashboard() {
   const [notificaciones, setNotificaciones] = useState([]);
   const [ingresosData, setIngresosData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const [pacientes, planes, cotizaciones, pagos, adminNotifs] = await Promise.all([
-        getPacientes(), getPlanes(), getCotizaciones(), getPagos(), getAdminNotificaciones()
-      ]);
+      setLoadError('');
+      try {
+        const [pacientes, planes, cotizaciones, pagos, adminNotifs] = await Promise.all([
+          getPacientes(), getPlanes(), getCotizaciones(), getPagos(), getAdminNotificaciones()
+        ]);
 
-      // Stats
-      const totalPagado = pagos.filter(p => p.estado === 'Pagado').reduce((acc, p) => acc + p.monto, 0);
-      setStats({
-        pacientesTotales: pacientes.length,
-        planesActivos: planes.filter(p => p.estado === 'Activo').length,
-        solicitudesPendientes: cotizaciones.filter(c => c.estado === 'Pendiente').length,
-        ingresosSimulados: totalPagado
-      });
+        // Stats
+        const totalPagado = pagos.filter(p => p.estado === 'Pagado').reduce((acc, p) => acc + p.monto, 0);
+        setStats({
+          pacientesTotales: pacientes.length,
+          planesActivos: planes.filter(p => p.estado === 'Activo').length,
+          solicitudesPendientes: cotizaciones.filter(c => c.estado === 'Pendiente').length,
+          ingresosSimulados: totalPagado
+        });
 
-      setRecentPacientes(pacientes.slice(0, 5));
-      setNotificaciones(adminNotifs.slice(0, 5));
+        setRecentPacientes(pacientes.slice(0, 5));
+        setNotificaciones(adminNotifs.slice(0, 5));
 
-      // Simulated revenue chart data based on last 6 months
-      const months = ['Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'];
-      const data = months.map(m => ({
-        name: m,
-        ingresos: Math.floor(Math.random() * 500) + 150, // Mock data based on months
-        pacientes: Math.floor(Math.random() * 15) + 5
-      }));
+        // Simulated revenue chart data based on last 6 months
+        const months = ['Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'];
+        const data = months.map(m => ({
+          name: m,
+          ingresos: Math.floor(Math.random() * 500) + 150, // Mock data based on months
+          pacientes: Math.floor(Math.random() * 15) + 5
+        }));
 
-      // add real payments from this month
-      const currentMonthTotal = pagos
-        .filter(p => p.estado === 'Pagado' && new Date(p.fecha).getMonth() === new Date().getMonth())
-        .reduce((acc, p) => acc + p.monto, 0);
+        // add real payments from this month
+        const currentMonthTotal = pagos
+          .filter(p => p.estado === 'Pagado' && new Date(p.fecha).getMonth() === new Date().getMonth())
+          .reduce((acc, p) => acc + p.monto, 0);
 
-      if (currentMonthTotal > 0) {
-        data[data.length - 1].ingresos = currentMonthTotal;
+        if (currentMonthTotal > 0) {
+          data[data.length - 1].ingresos = currentMonthTotal;
+        }
+
+        setIngresosData(data);
+      } catch (err) {
+        console.error('Error al cargar el dashboard administrativo:', err);
+        setLoadError(err.message || 'No se pudo cargar el dashboard administrativo.');
+      } finally {
+        setLoading(false);
       }
-
-      setIngresosData(data);
-      setLoading(false);
     }
     loadData();
   }, []);
@@ -70,6 +78,11 @@ export default function Dashboard() {
         <Topbar title="Dashboard General" />
         
         <div className="content-area">
+          {loadError && (
+            <div className="card" role="alert" style={{ marginBottom: '24px', color: 'var(--red)' }}>
+              No se pudo cargar toda la información del panel: {loadError}
+            </div>
+          )}
           {loading && (
             <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-mid)' }}>Cargando...</div>
           )}

@@ -15,6 +15,13 @@ function toNumber(val, fallback = 0) {
   return isNaN(n) ? fallback : n;
 }
 
+function readRows(data, error, resource) {
+  if (error) throw new Error(`No se pudieron cargar ${resource}: ${error.message}`);
+  if (data == null) return [];
+  if (!Array.isArray(data)) throw new Error(`Respuesta inválida al cargar ${resource}.`);
+  return data;
+}
+
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); // Deprecated when using UUID in db, kept for fallback
 }
@@ -43,8 +50,7 @@ export async function migrateFromLegacy() {
 
 export async function getPacientes() {
   const { data, error } = await supabase.from('pacientes').select('*').order('fechaRegistro', { ascending: false });
-  if (error) { console.error(error); return []; }
-  return data || [];
+  return readRows(data, error, 'pacientes');
 }
 
 export async function getPacienteById(id) {
@@ -140,8 +146,7 @@ export async function changePassword(id, currentPass, newPass) {
 
 export async function getPlantillas() {
   const { data, error } = await supabase.from('plantillas').select('*');
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'plantillas');
 }
 
 export async function getPlantillaById(id) {
@@ -184,19 +189,17 @@ export async function deletePlantilla(id) {
 
 export async function getPlanes() {
   const { data, error } = await supabase.from('planes').select('*').order('fecha', { ascending: false });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'planes');
 }
 
 export async function getPlanesByPaciente(pacienteId) {
   const { data, error } = await supabase.from('planes').select('*').eq('pacienteId', pacienteId).order('fecha', { ascending: false });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'planes del paciente');
 }
 
 export async function getPlanActivo(pacienteId) {
-  const { data, error } = await supabase.from('planes').select('*').eq('pacienteId', pacienteId).eq('estado', 'Activo').order('fecha', { ascending: false }).limit(1).single();
-  if (error) return null;
+  const { data, error } = await supabase.from('planes').select('*').eq('pacienteId', pacienteId).eq('estado', 'Activo').order('fecha', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw new Error(`No se pudo cargar el plan activo: ${error.message}`);
   return data;
 }
 
@@ -232,14 +235,12 @@ export async function createPlan(dataObj) {
 
 export async function getCotizaciones() {
   const { data, error } = await supabase.from('cotizaciones').select('*').order('fecha', { ascending: false });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'cotizaciones');
 }
 
 export async function getCotizacionesByPaciente(pacienteId) {
   const { data, error } = await supabase.from('cotizaciones').select('*').eq('pacienteId', pacienteId).order('fecha', { ascending: false });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'cotizaciones del paciente');
 }
 
 export async function createCotizacion(dataObj) {
@@ -278,13 +279,13 @@ export async function updateCotizacion(id, dataObj) {
 }
 
 export async function checkExpiredCotizaciones() {
-  const { data } = await supabase.from('cotizaciones').select('id, fechaExpiracion').eq('estado', 'Pendiente');
-  if (data) {
-    const now = new Date();
-    const expiredIds = data.filter(c => new Date(c.fechaExpiracion) < now).map(c => c.id);
-    if (expiredIds.length > 0) {
-      await supabase.from('cotizaciones').update({ estado: 'Expirada' }).in('id', expiredIds);
-    }
+  const { data, error } = await supabase.from('cotizaciones').select('id, fechaExpiracion').eq('estado', 'Pendiente');
+  const cotizaciones = readRows(data, error, 'cotizaciones pendientes');
+  const now = new Date();
+  const expiredIds = cotizaciones.filter(c => new Date(c.fechaExpiracion) < now).map(c => c.id);
+  if (expiredIds.length > 0) {
+    const { error: updateError } = await supabase.from('cotizaciones').update({ estado: 'Expirada' }).in('id', expiredIds);
+    if (updateError) throw new Error(`No se pudieron actualizar las cotizaciones expiradas: ${updateError.message}`);
   }
 }
 
@@ -294,14 +295,12 @@ export async function checkExpiredCotizaciones() {
 
 export async function getPagos() {
   const { data, error } = await supabase.from('pagos').select('*').order('fecha', { ascending: false });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'pagos');
 }
 
 export async function getPagosByPaciente(pacienteId) {
   const { data, error } = await supabase.from('pagos').select('*').eq('pacienteId', pacienteId).order('fecha', { ascending: false });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'pagos del paciente');
 }
 
 export async function createPago(dataObj) {
@@ -332,14 +331,12 @@ export async function updatePago(id, dataObj) {
 
 export async function getNotificaciones() {
   const { data, error } = await supabase.from('notificaciones').select('*').order('fecha', { ascending: false });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'notificaciones');
 }
 
 export async function getNotificacionesByPaciente(pacienteId) {
   const { data, error } = await supabase.from('notificaciones').select('*').or(`pacienteId.eq.${pacienteId},tipo.eq.global`).order('fecha', { ascending: false });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'notificaciones del paciente');
 }
 
 export async function getUnreadNotificaciones(pacienteId) {
@@ -367,8 +364,7 @@ export async function markAllNotificationsRead(pacienteId) {
 
 export async function getAdminNotificaciones() {
   const { data, error } = await supabase.from('notificaciones').select('*').in('tipo', ['solicitud', 'admin']).or('pacienteId.is.null').order('fecha', { ascending: false });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'notificaciones de administración');
 }
 
 /* ============================================================
@@ -377,10 +373,10 @@ export async function getAdminNotificaciones() {
 
 export async function getCumplimiento(pacienteId) {
   const { data, error } = await supabase.from('cumplimiento').select('*').eq('pacienteId', pacienteId);
-  if (error || !data) return {};
+  const rows = readRows(data, error, 'cumplimiento del paciente');
   
   const result = {};
-  data.forEach(row => {
+  rows.forEach(row => {
     if (!result[row.dia]) result[row.dia] = {};
     result[row.dia][row.comidaId] = row.completado;
   });
@@ -400,18 +396,18 @@ export async function setCumplimiento(pacienteId, dia, comidaId, completado) {
 export async function getCumplimientoDiario(pacienteId, dia) {
   const { data, error } = await supabase.from('cumplimiento').select('completado').eq('pacienteId', pacienteId).eq('dia', dia);
   const total = 5;
-  if (error || !data) return { completed: 0, total, percent: 0 };
+  const rows = readRows(data, error, 'cumplimiento diario');
   
-  const completed = data.filter(r => r.completado).length;
+  const completed = rows.filter(r => r.completado).length;
   return { completed, total, percent: Math.round((completed / total) * 100) };
 }
 
 export async function getCumplimientoSemanal(pacienteId) {
   const { data, error } = await supabase.from('cumplimiento').select('completado').eq('pacienteId', pacienteId);
   const total = 35; // 7 days × 5 meals
-  if (error || !data) return { completed: 0, total, percent: 0 };
+  const rows = readRows(data, error, 'cumplimiento semanal');
   
-  const completed = data.filter(r => r.completado).length;
+  const completed = rows.filter(r => r.completado).length;
   return { completed, total, percent: Math.round((completed / total) * 100) };
 }
 
@@ -421,8 +417,7 @@ export async function getCumplimientoSemanal(pacienteId) {
 
 export async function getPesoHistorial(pacienteId) {
   const { data, error } = await supabase.from('peso_historial').select('*').eq('pacienteId', pacienteId).order('fecha', { ascending: true });
-  if (error) return [];
-  return data || [];
+  return readRows(data, error, 'historial de peso');
 }
 
 export async function addPesoHistorial(pacienteId, peso) {

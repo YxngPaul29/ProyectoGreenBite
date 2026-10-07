@@ -19,26 +19,35 @@ export default function CatalogoPaciente() {
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [filter, setFilter] = useState('todos');
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const data = await getPlantillas();
-      const all = data.filter(p => p.estado === 'activo');
-      setPlantillas(all);
+      setLoadError('');
+      try {
+        const data = await getPlantillas();
+        const all = data.filter(p => p.estado === 'activo');
+        setPlantillas(all);
 
-      if (stateSelectedId) {
-        const p = all.find(x => x.id === stateSelectedId);
-        if (p) setSelectedPlan(p);
+        if (stateSelectedId) {
+          const p = all.find(x => x.id === stateSelectedId);
+          if (p) setSelectedPlan(p);
+        }
+      } catch (err) {
+        console.error('Error al cargar el catálogo del paciente:', err);
+        setLoadError(err.message || 'No se pudo cargar el catálogo.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadData();
   }, [stateSelectedId]);
 
   const filteredPlans = plantillas.filter(p => {
     if (filter === 'todos') return true;
-    return p.objetivo === filter;
+    const objective = p.objetivo === 'peso' ? 'bajar' : p.objetivo;
+    return objective === filter;
   });
 
   const handleSolicitar = async (plan) => {
@@ -79,8 +88,14 @@ export default function CatalogoPaciente() {
             <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-mid)' }}>Cargando...</div>
           )}
 
+          {loadError && (
+            <div className="card" role="alert" style={{ marginBottom: '24px', color: 'var(--red)' }}>
+              No se pudo cargar el catálogo: {loadError}
+            </div>
+          )}
+
           <div className="grid-3">
-            {!loading && filteredPlans.map(plan => (
+            {!loading && !loadError && filteredPlans.map(plan => (
               <div key={plan.id} className="card animate-slide-up" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
                 <h3 style={{ fontSize: '18px', color: 'var(--green-dark)', marginBottom: '8px' }}>{plan.nombre}</h3>
                 <span className="badge badge-green" style={{ alignSelf: 'flex-start', marginBottom: '16px' }}>
@@ -101,7 +116,7 @@ export default function CatalogoPaciente() {
             ))}
           </div>
 
-          {!loading && filteredPlans.length === 0 && (
+          {!loading && !loadError && filteredPlans.length === 0 && (
             <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-mid)', border: '1px dashed var(--border)', borderRadius: 'var(--radius)' }}>
               No hay planes disponibles para esta categoría actualmente.
             </div>

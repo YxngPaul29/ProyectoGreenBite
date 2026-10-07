@@ -14,6 +14,7 @@ export default function Pacientes() {
   const { addToast } = useToast();
   const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modal states
@@ -29,14 +30,21 @@ export default function Pacientes() {
 
   const loadData = async () => {
     setLoading(true);
-    // Add active plan to each patient object for table display
-    const base = await getPacientes();
-    const data = await Promise.all(base.map(async p => ({
-      ...p,
-      planActivo: await getPlanActivo(p.id)
-    })));
-    setPacientes(data);
-    setLoading(false);
+    setLoadError('');
+    try {
+      // Add active plan to each patient object for table display
+      const base = await getPacientes();
+      const data = await Promise.all(base.map(async p => ({
+        ...p,
+        planActivo: await getPlanActivo(p.id)
+      })));
+      setPacientes(data);
+    } catch (err) {
+      console.error('Error al cargar pacientes:', err);
+      setLoadError(err.message || 'No se pudo cargar el directorio de pacientes.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { loadData(); }, []);
@@ -116,6 +124,11 @@ export default function Pacientes() {
           </div>
 
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            {loadError && (
+              <div role="alert" style={{ padding: '24px', color: 'var(--red)' }}>
+                No se pudo cargar el directorio: {loadError}
+              </div>
+            )}
             <div className="table-container" style={{ border: 'none' }}>
               <table>
                 <thead>
@@ -132,7 +145,7 @@ export default function Pacientes() {
                   {loading && (
                     <tr><td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-mid)' }}>Cargando...</td></tr>
                   )}
-                  {!loading && filteredPacientes.map(p => (
+                  {!loading && !loadError && filteredPacientes.map(p => (
                     <tr key={p.id}>
                       <td style={{ fontWeight: '600' }}>{p.nombre}</td>
                       <td>{p.email}</td>
@@ -157,7 +170,7 @@ export default function Pacientes() {
               </table>
             </div>
             
-            {!loading && filteredPacientes.length === 0 && (
+            {!loading && !loadError && filteredPacientes.length === 0 && (
               <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-mid)' }}>
                 No se encontraron pacientes.
               </div>

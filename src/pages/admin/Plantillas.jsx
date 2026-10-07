@@ -5,6 +5,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import EmptyState from '../../components/EmptyState';
 import { useToast } from '../../components/Toast';
 import { getPlantillas, createPlantilla, updatePlantilla, deletePlantilla } from '../../lib/storage';
 
@@ -12,6 +13,7 @@ export default function Plantillas() {
   const { addToast } = useToast();
   const [plantillas, setPlantillas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -26,9 +28,15 @@ export default function Plantillas() {
 
   const loadData = async () => {
     setLoading(true);
-    const data = await getPlantillas();
-    setPlantillas(data);
-    setLoading(false);
+    setLoadError('');
+    try {
+      setPlantillas(await getPlantillas());
+    } catch (err) {
+      console.error('Error al cargar plantillas:', err);
+      setLoadError(err.message || 'No se pudieron cargar las plantillas.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { loadData(); }, []);
@@ -97,9 +105,14 @@ export default function Plantillas() {
           {loading && (
             <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-mid)' }}>Cargando...</div>
           )}
+          {loadError && (
+            <div className="card" role="alert" style={{ marginBottom: '24px', color: 'var(--red)' }}>
+              No se pudieron cargar las plantillas: {loadError}
+            </div>
+          )}
 
           <div className="grid-3">
-            {!loading && plantillas.map(pl => (
+            {!loading && !loadError && plantillas.map(pl => (
               <div key={pl.id} className="card animate-slide-up" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <h3 style={{ fontSize: '18px', color: 'var(--green-dark)', margin: 0 }}>{pl.nombre}</h3>
@@ -143,6 +156,15 @@ export default function Plantillas() {
               </div>
             ))}
           </div>
+          {!loading && !loadError && plantillas.length === 0 && (
+            <EmptyState
+              icon="📋"
+              title="No hay plantillas"
+              description="Aún no se han creado plantillas de dieta."
+              actionText="Crear Plantilla"
+              onAction={() => openModal()}
+            />
+          )}
         </div>
       </main>
 

@@ -31,27 +31,35 @@ export default function MisDietas() {
   const [cumplimientoData, setCumplimientoData] = useState({});
   const [dayProgress, setDayProgress] = useState({ completed: 0, total: 5, percent: 0 });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      // Select current day based on actual day of week
-      const currentDayIndex = new Date().getDay(); // 0 is Sunday, 1 is Monday...
-      const mapDays = [6, 0, 1, 2, 3, 4, 5]; // Map to our DIAS array (Mon=0, Sun=6)
-      const today = DIAS[mapDays[currentDayIndex]];
-      setActiveDay(today);
+      setLoadError('');
+      try {
+        // Select current day based on actual day of week
+        const currentDayIndex = new Date().getDay(); // 0 is Sunday, 1 is Monday...
+        const mapDays = [6, 0, 1, 2, 3, 4, 5]; // Map to our DIAS array (Mon=0, Sun=6)
+        const today = DIAS[mapDays[currentDayIndex]];
+        setActiveDay(today);
 
-      const active = await getPlanActivo(user.id);
-      setPlan(active);
+        const active = await getPlanActivo(user.id);
+        setPlan(active);
 
-      if (active && active.plantillaId) {
-        setPlantilla(await getPlantillaById(active.plantillaId));
+        if (active && active.plantillaId) {
+          setPlantilla(await getPlantillaById(active.plantillaId));
+        }
+
+        const cumplimiento = await getCumplimiento(user.id);
+        setCumplimientoData(cumplimiento);
+        setDayProgress(await getCumplimientoDiario(user.id, today));
+      } catch (err) {
+        console.error('Error al cargar las dietas del paciente:', err);
+        setLoadError(err.message || 'No se pudieron cargar las dietas del paciente.');
+      } finally {
+        setLoading(false);
       }
-
-      const cumplimiento = await getCumplimiento(user.id) || {};
-      setCumplimientoData(cumplimiento);
-      setDayProgress(await getCumplimientoDiario(user.id, today));
-      setLoading(false);
     }
     loadData();
   }, [user.id]);
@@ -98,13 +106,17 @@ export default function MisDietas() {
         <main className="main-content">
           <Topbar title="Mis Dietas" />
           <div className="content-area">
-            <EmptyState 
+            {loadError ? (
+              <div className="card" role="alert" style={{ color: 'var(--red)' }}>
+                No se pudieron cargar las dietas: {loadError}
+              </div>
+            ) : <EmptyState 
               icon="🍽️"
               title="Sin plan nutricional activo"
               description="Actualmente no tienes ningún plan asignado o activo. Explora nuestro catálogo y solicita uno para comenzar."
               actionText="Explorar Catálogo"
               actionLink="/paciente/catalogo"
-            />
+            />}
           </div>
         </main>
       </div>

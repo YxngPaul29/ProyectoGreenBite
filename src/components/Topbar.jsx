@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../lib/AuthContext';
-import { useLocation } from 'react-router-dom';
 import { 
-  getUnreadNotificaciones, 
   getNotificacionesByPaciente, 
   markNotificationRead, 
   markAllNotificationsRead 
@@ -12,14 +10,21 @@ export default function Topbar({ title }) {
   const { user } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [notificationError, setNotificationError] = useState('');
   const dropdownRef = useRef(null);
   
   const isPaciente = user?.rol === 'paciente';
   
   const loadNotifications = async () => {
-    if (isPaciente) {
+    if (!isPaciente) return;
+    try {
       const data = await getNotificacionesByPaciente(user.id);
       setNotifications(data);
+      setNotificationError('');
+    } catch (err) {
+      console.error('Error al cargar notificaciones:', err);
+      setNotifications([]);
+      setNotificationError(err.message || 'No se pudieron cargar las notificaciones.');
     }
   };
 
@@ -104,7 +109,11 @@ export default function Topbar({ title }) {
                 </div>
                 
                 <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  {notifications.length > 0 ? notifications.map(notif => (
+                  {notificationError ? (
+                    <div role="alert" style={{ padding: '20px 16px', color: 'var(--red)', fontSize: '13px' }}>
+                      {notificationError}
+                    </div>
+                  ) : notifications.length > 0 ? notifications.map(notif => (
                     <div 
                       key={notif.id}
                       style={{ 

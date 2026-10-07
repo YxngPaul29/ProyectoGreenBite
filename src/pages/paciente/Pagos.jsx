@@ -22,6 +22,7 @@ export default function Pagos() {
   const [cotizaciones, setCotizaciones] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [activeTab, setActiveTab] = useState('pendientes'); // pendientes, historial
   
   // Checkout flow state
@@ -30,14 +31,21 @@ export default function Pagos() {
 
   const loadData = async () => {
     setLoading(true);
-    await checkExpiredCotizaciones(); // Auto-expire quotes if necessary
-    const [cots, pagosData] = await Promise.all([
-      getCotizacionesByPaciente(user.id),
-      getPagosByPaciente(user.id),
-    ]);
-    setCotizaciones(cots);
-    setPagos(pagosData);
-    setLoading(false);
+    setLoadError('');
+    try {
+      await checkExpiredCotizaciones(); // Auto-expire quotes if necessary
+      const [cots, pagosData] = await Promise.all([
+        getCotizacionesByPaciente(user.id),
+        getPagosByPaciente(user.id),
+      ]);
+      setCotizaciones(cots);
+      setPagos(pagosData);
+    } catch (err) {
+      console.error('Error al cargar pagos y cotizaciones:', err);
+      setLoadError(err.message || 'No se pudieron cargar los pagos.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -94,6 +102,11 @@ export default function Pagos() {
         <Topbar title="Cotizaciones y Pagos" />
         
         <div className="content-area">
+          {loadError && (
+            <div className="card" role="alert" style={{ marginBottom: '24px', color: 'var(--red)' }}>
+              No se pudo cargar la información de pagos: {loadError}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid var(--border)' }}>
             <button 
               className={`menu-item ${activeTab === 'pendientes' ? 'active' : ''}`}
